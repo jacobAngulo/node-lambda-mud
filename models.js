@@ -59,10 +59,12 @@ function findPlayerByID(id) {
 function turnOffAutopilot(id) {
   return findPlayerByID(id)
     .then(player => {
-      const updatedPlayer = { ...player, autopilot: false };
+      const updatedPlayer = { ...player, autopilot: 0 };
       db("players")
         .where({ id: id })
-        .update(updatedPlayer);
+        .update(updatedPlayer)
+        .then()
+        .catch();
     })
     .catch(error => {
       console.log(`ERROR: ${error}`);
@@ -75,7 +77,7 @@ function autoTraverse(id) {
   findPlayerByID(id)
     .then(player => {
       console.log(player);
-      const updatedPlayer = { ...player, autopilot: true };
+      const updatedPlayer = { ...player, autopilot: 1 };
       console.log(updatedPlayer);
       db("players")
         .where({ id: id })
