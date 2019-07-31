@@ -10,9 +10,12 @@ exports.up = function(knex) {
     player.integer("gold");
     player.integer("cooldown");
     player.boolean("autopilot");
+    player.string("path");
   });
 };
 
 exports.down = function(knex) {
   return knex.schema.dropTableIfExists("players");
 };
+
+// winsound.Beep(freq, dur)
