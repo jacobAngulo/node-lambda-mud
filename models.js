@@ -29,7 +29,7 @@ function createPlayer(token) {
         autopilot: false,
         shouldStop: false,
         path: "[]",
-        visited: "[]"
+        visited: "{}"
       };
       return db("players")
         .insert(player)
@@ -87,7 +87,6 @@ function autoTraverse(id) {
               .then(player => {
                 if (player.autopilot) {
                   console.log("running");
-                  // write the science
                   axios({
                     method: "GET",
                     headers: { Authorization: `Token ${player.token}` },
@@ -95,25 +94,88 @@ function autoTraverse(id) {
                       "https://lambda-treasure-hunt.herokuapp.com/api/adv/init"
                   })
                     .then(res => {
-                      console.log(res.data);
+                      // console.log("last room???????", res.data);
                       setTimeout(() => {
+                        const prevRoomID = res.data.room_id;
+                        const prevRoomExits = res.data.exits;
+                        let map = JSON.parse(player.map);
+                        let path = JSON.parse(player.path);
+                        let visited = JSON.parse(player.visited);
+
+                        if (!(prevRoomID in visited)) {
+                          visited[prevRoomID] = {};
+
+                          prevRoomExits.forEach(exit => {
+                            visited[prevRoomID][exit] = "?";
+                          });
+                        }
+
+                        const determineNextExit = () => {
+                          if (path.length) {
+                            // return path.unshift();
+                          } else {
+                          }
+
+                          return Math.floor(
+                            Math.random() * res.data.exits.length
+                          );
+                        };
+
+                        const nextDirection =
+                          res.data.exits[determineNextExit()];
+
                         axios({
                           method: "POST",
                           headers: { Authorization: `Token ${player.token}` },
                           url:
                             "https://lambda-treasure-hunt.herokuapp.com/api/adv/move",
                           data: {
-                            direction: `${
-                              res.data.exits[
-                                Math.floor(
-                                  Math.random() * res.data.exits.length
-                                )
-                              ]
-                            }`
+                            direction: nextDirection
                           }
                         })
-                          .then(res => {
-                            console.log(res.data);
+                          .then(async res => {
+                            const { room_id } = res.data;
+                            // console.log(res.data);
+                            const opposites = {
+                              n: "s",
+                              e: "w",
+                              s: "n",
+                              w: "e"
+                            };
+                            if (room_id in visited) {
+                              visited[room_id][
+                                opposites[nextDirection]
+                              ] = prevRoomID;
+                            } else {
+                              visited[room_id] = {};
+
+                              res.data.exits.forEach(exit => {
+                                if (exit === opposites[nextDirection]) {
+                                  visited[room_id][exit] = prevRoomID;
+                                } else {
+                                  visited[room_id][exit] = "?";
+                                }
+                              });
+                            }
+                            visited[prevRoomID][nextDirection] = room_id;
+
+                            await db("players")
+                              .where({ id: player.id })
+                              .update({
+                                ...player,
+                                path: JSON.stringify(path),
+                                map: JSON.stringify(map),
+                                visited: JSON.stringify(visited)
+                              });
+
+                            console.log(
+                              await db("players")
+                                .select("visited")
+                                .where({
+                                  id: player.id
+                                })
+                            );
+
                             setTimeout(
                               repeater,
                               res.data.cooldown * 1000 /* new timeout */
