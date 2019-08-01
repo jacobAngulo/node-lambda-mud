@@ -73,33 +73,29 @@ function turnOffAutopilot(id) {
 }
 
 function autoTraverse(id) {
-  console.log("here", id);
   findPlayerByID(id)
     .then(player => {
-      console.log(player);
       const updatedPlayer = { ...player, autopilot: 1 };
-      console.log(updatedPlayer);
       db("players")
         .where({ id: id })
         .update(updatedPlayer)
         .then(() => {
-          while (true) {
-            findPlayerByID(id)
+          const repeater = async () => {
+            await findPlayerByID(id)
               .then(player => {
                 if (player.autopilot) {
-                  setTimeout(() => {
-                    console.log("running");
-                  }, player.cooldown * 1000);
+                  console.log("running");
                 } else {
-                  console.log("Break");
-                  Break;
+                  return;
                 }
               })
               .catch(error => {
                 console.log(`ERROR: ${error}`);
                 return error;
               });
-          }
+            setTimeout(repeater, 1000);
+          };
+          repeater();
         })
         .catch(error => {
           console.log(`ERROR: ${error}`);
@@ -114,9 +110,7 @@ function autoTraverse(id) {
 
 // { 0: { n : 4, s : 3, e : 2, w : 3 }, 4: {} }
 
-//                                                                                                  | if there aren't any unvisited rooms => clear visited rooms
+//                                                                                                  if there aren't any unvisited rooms => clear visited rooms
 //  traverse:                                                                                       v
 //      path ? nextDirection(path[0]) : next(random direction that doesn't point to a room in our visited rooms)
-//
-//
 //
