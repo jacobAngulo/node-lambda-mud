@@ -27,6 +27,7 @@ function createPlayer(token) {
         gold: data.gold,
         cooldown: data.cooldown,
         autopilot: false,
+        shouldStop: false,
         path: "[]",
         visited: "[]"
       };
@@ -85,19 +86,60 @@ function autoTraverse(id) {
             await findPlayerByID(id)
               .then(player => {
                 if (player.autopilot) {
-                  // write the science
                   console.log("running");
-                } else {
-                  return;
+                  // write the science
+                  axios({
+                    method: "GET",
+                    headers: { Authorization: `Token ${player.token}` },
+                    url:
+                      "https://lambda-treasure-hunt.herokuapp.com/api/adv/init"
+                  })
+                    .then(res => {
+                      console.log(res.data);
+                      setTimeout(() => {
+                        axios({
+                          method: "POST",
+                          headers: { Authorization: `Token ${player.token}` },
+                          url:
+                            "https://lambda-treasure-hunt.herokuapp.com/api/adv/move",
+                          data: {
+                            direction: `${
+                              res.data.exits[
+                                Math.floor(
+                                  Math.random() * res.data.exits.length
+                                )
+                              ]
+                            }`
+                          }
+                        })
+                          .then(res => {
+                            console.log(res.data);
+                            setTimeout(
+                              repeater,
+                              res.data.cooldown * 1000 /* new timeout */
+                            );
+                          })
+                          .catch(error => {
+                            console.log(`ERROR: ${error}`);
+                            return error;
+                          });
+                      }, res.data.cooldown * 1000);
+                    })
+                    .catch(error => {
+                      console.log(`ERROR: ${error}`);
+                      return error;
+                    });
                 }
               })
               .catch(error => {
                 console.log(`ERROR: ${error}`);
                 return error;
               });
-            setTimeout(repeater, 1000 /** new timeout */);
           };
-          setTimeout(repeater, 1000 /** last timeout */);
+          setTimeout(
+            repeater,
+            updatedPlayer.cooldown * 1000 /* last timeout */
+          );
         })
         .catch(error => {
           console.log(`ERROR: ${error}`);
@@ -110,8 +152,7 @@ function autoTraverse(id) {
     });
 }
 
-// { 0: { n : 4, s : 3, e : 2, w : 3 }, 4: {} }
-
+// visited: [ 0: { n : 4, s : 3, e : ?, w : 3 }, 4: {} ]
 //                                                                                                  if there aren't any unvisited rooms => clear visited rooms
 //  traverse:                                                                                       v
 //      path ? nextDirection(path[0]) : next(random direction that doesn't point to a room in our visited rooms)

@@ -10,6 +10,7 @@ exports.up = function(knex) {
     player.integer("gold");
     player.integer("cooldown");
     player.boolean("autopilot");
+    player.boolean("shouldStop");
     player.string("path");
     player.string("visited");
   });
