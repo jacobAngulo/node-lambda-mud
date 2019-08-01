@@ -11,6 +11,7 @@ exports.up = function(knex) {
     player.integer("cooldown");
     player.boolean("autopilot");
     player.string("path");
+    player.string("visited");
   });
 };
 

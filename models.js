@@ -27,7 +27,8 @@ function createPlayer(token) {
         gold: data.gold,
         cooldown: data.cooldown,
         autopilot: false,
-        path: "[]"
+        path: "[]",
+        visited: "[]"
       };
       return db("players")
         .insert(player)
@@ -84,6 +85,7 @@ function autoTraverse(id) {
             await findPlayerByID(id)
               .then(player => {
                 if (player.autopilot) {
+                  // write the science
                   console.log("running");
                 } else {
                   return;
@@ -93,9 +95,9 @@ function autoTraverse(id) {
                 console.log(`ERROR: ${error}`);
                 return error;
               });
-            setTimeout(repeater, 1000);
+            setTimeout(repeater, 1000 /** new timeout */);
           };
-          repeater();
+          setTimeout(repeater, 1000 /** last timeout */);
         })
         .catch(error => {
           console.log(`ERROR: ${error}`);
