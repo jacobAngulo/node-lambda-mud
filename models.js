@@ -87,6 +87,8 @@ function autoTraverse(id) {
                 if (player.autopilot) {
                   // write the science
                   console.log("running");
+                  player = visited
+                  player++
                 } else {
                   return;
                 }
