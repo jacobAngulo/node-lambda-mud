@@ -102,8 +102,8 @@ function autoTraverse(id) {
                       "https://lambda-treasure-hunt.herokuapp.com/api/adv/init"
                   })
                     .then(res => {
-                      // console.log("last room???????", res.data);
                       setTimeout(() => {
+                        let { items } = res.data;
                         const prevRoomID = res.data.room_id;
                         const prevRoomExits = res.data.exits;
                         const prevRoomTitle = res.data.title;
@@ -227,57 +227,10 @@ function autoTraverse(id) {
                               cooldown
                             } = res.data;
 
-                            function grab(i) {
-                              console.log(items[i]);
-                              if (i < items.length - 1) {
-                                setTimeout(function() {
-                                  i++;
-                                  grab(i);
-                                }, cooldown * 1000);
-                              }
-                            }
-
-                            if (items.length > 0) {
-                              grab(0);
-                            }
-
-                            // if (items.length > 0) {
-                            //   items.forEach(item => {
-                            //     setTimeout(() => {
-                            //       console.log(`picking up ${item}`);
-                            //       axios({
-                            //         method: "POST",
-                            //         headers: {
-                            //           Authorization: `Token ${player.token}`
-                            //         },
-                            //         url:
-                            //           "https://lambda-treasure-hunt.herokuapp.com/api/adv/take",
-                            //         data: {
-                            //           name: item
-                            //         }
-                            //       })
-                            //         .then(res => {
-                            //           console.log(res);
-                            //           cooldown = res.cooldown;
-                            //         })
-                            //         .catch(error => {
-                            //           console.log(`ERROR: ${error}`);
-                            //           return error;
-                            //         });
-                            //     }, cooldown * 1000);
-                            //   });
-                            // }
-
                             coordinates = JSON.stringify(coordinates);
 
                             coordinates = coordinates.replace("(", "[");
                             coordinates = coordinates.replace(")", "]");
-
-                            console.log(coordinates);
-
-                            // visited[room_id]["coordinates"] = JSON.parse(
-                            //   coordinates
-                            // );
 
                             if (room_id in visited) {
                               visited[room_id]["exits"][
@@ -313,6 +266,8 @@ function autoTraverse(id) {
                               map = { ...visited };
                             }
 
+                            console.log(Object.keys(map));
+
                             await db("players")
                               .where({ id: player.id })
                               .update({
@@ -321,14 +276,6 @@ function autoTraverse(id) {
                                 map: JSON.stringify(map),
                                 visited: JSON.stringify(visited)
                               });
-
-                            console.log(
-                              await db("players")
-                                .select("visited")
-                                .where({
-                                  id: player.id
-                                })
-                            );
 
                             setTimeout(
                               repeater,
